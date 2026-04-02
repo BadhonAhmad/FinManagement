@@ -93,6 +93,31 @@ Register with a username, email, password, and choose a role:
 | **Analyst** | View all records across users, dashboard analytics, trends |
 | **Admin** | Full access — create/edit/delete records, manage users, system-wide dashboard |
 
+## API Documentation (Swagger UI)
+
+The backend ships with interactive Swagger docs powered by SpringDoc OpenAPI. Once the backend is running, you can explore and test every endpoint directly from the browser — no Postman needed.
+
+### URLs (local)
+
+| Page | URL |
+|------|-----|
+| **Swagger UI** | [http://localhost:8080/api/swagger-ui.html](http://localhost:8080/api/swagger-ui.html) |
+| **Raw OpenAPI JSON** | [http://localhost:8080/api/docs](http://localhost:8080/api/docs) |
+
+### How to Use
+
+1. Start the backend (`cd backend && mvn spring-boot:run`)
+2. Open [http://localhost:8080/api/swagger-ui.html](http://localhost:8080/api/swagger-ui.html)
+3. Public endpoints (register, login) work without authentication
+4. For protected endpoints, first call `POST /api/auth/login` to get a JWT token
+5. Click the **Authorize** button (lock icon) at the top of the page
+6. Paste your token and hit Authorize — now you can test any endpoint
+
+### Exporting
+
+- Grab the raw spec at `/api/docs` and import it into Postman, Insomnia, or any OpenAPI-compatible tool
+- The spec is OpenAPI 3.0 format
+
 ## API Endpoints
 
 ### Authentication (public)
