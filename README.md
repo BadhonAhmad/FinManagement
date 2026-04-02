@@ -2,6 +2,10 @@
 
 A full-stack personal finance management dashboard built with Spring Boot and Next.js. Track income and expenses, visualize spending trends, and manage users with role-based access control.
 
+## Demo
+
+[![FinManagement - Full Demo](https://img.youtube.com/vi/8_ACB_MY4-s/0.jpg)](https://www.youtube.com/watch?v=8_ACB_MY4-s)
+
 ## What's Inside
 
 - **Dashboard** with summary cards, income/expense charts, category breakdowns, and trend lines
