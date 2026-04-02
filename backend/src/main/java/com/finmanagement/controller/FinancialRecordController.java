@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+import com.finmanagement.exception.UnauthorizedException;
 
 import java.time.LocalDate;
 
@@ -32,6 +33,7 @@ public class FinancialRecordController {
     @Operation(summary = "Create a new financial record")
     public ResponseEntity<ApiResponse<RecordResponse>> createRecord(
             @Valid @RequestBody RecordRequest request, Authentication authentication) {
+        requireWriteAccess(authentication);
         Long userId = getUserId(authentication);
         RecordResponse response = recordService.createRecord(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Record created successfully", response));
@@ -48,7 +50,7 @@ public class FinancialRecordController {
             @RequestParam(required = false) LocalDate endDate,
             @RequestParam(required = false) String search,
             Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = isAdminOrAnalyst(authentication) ? null : getUserId(authentication);
         PagedResponse<RecordResponse> response = recordService.getRecords(userId, type, category, startDate, endDate, search, page, size);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -66,6 +68,7 @@ public class FinancialRecordController {
     @Operation(summary = "Update record")
     public ResponseEntity<ApiResponse<RecordResponse>> updateRecord(
             @PathVariable Long id, @Valid @RequestBody RecordRequest request, Authentication authentication) {
+        requireWriteAccess(authentication);
         Long userId = getUserId(authentication);
         boolean isAdmin = isAdmin(authentication);
         RecordResponse response = recordService.updateRecord(userId, id, request, isAdmin);
@@ -75,6 +78,7 @@ public class FinancialRecordController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete record (soft delete)")
     public ResponseEntity<ApiResponse<Void>> deleteRecord(@PathVariable Long id, Authentication authentication) {
+        requireWriteAccess(authentication);
         Long userId = getUserId(authentication);
         boolean isAdmin = isAdmin(authentication);
         recordService.deleteRecord(userId, id, isAdmin);
@@ -87,5 +91,16 @@ public class FinancialRecordController {
 
     private boolean isAdmin(Authentication authentication) {
         return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    }
+
+    private void requireWriteAccess(Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            throw new UnauthorizedException("Only administrators can create, update, or delete records");
+        }
+    }
+
+    private boolean isAdminOrAnalyst(Authentication authentication) {
+        return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
+            || authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ANALYST"));
     }
 }

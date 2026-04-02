@@ -59,5 +59,17 @@ public interface FinancialRecordRepository extends JpaRepository<FinancialRecord
            "WHERE r.date BETWEEN :startDate AND :endDate AND r.deleted = false")
     long countByDateBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
+    @Query("SELECT r.category, r.type, COALESCE(SUM(r.amount), 0), COUNT(r) FROM FinancialRecord r " +
+           "WHERE r.date BETWEEN :startDate AND :endDate AND r.deleted = false " +
+           "GROUP BY r.category, r.type ORDER BY SUM(r.amount) DESC")
+    List<Object[]> getAllCategoryTotals(@Param("startDate") LocalDate startDate,
+                                        @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT r.date, r.type, r.amount FROM FinancialRecord r " +
+           "WHERE r.deleted = false AND r.date >= :startDate ORDER BY r.date")
+    List<Object[]> getAllRecordsForTrends(@Param("startDate") LocalDate startDate);
+
     List<FinancialRecord> findByUserIdOrderByDateDesc(Long userId, Pageable pageable);
+
+    List<FinancialRecord> findAllByDeletedFalseOrderByDateDescCreatedAtDesc(Pageable pageable);
 }

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -33,7 +34,7 @@ public class DashboardController {
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate,
             Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = isViewer(authentication) ? getUserId(authentication) : null;
         return ResponseEntity.ok(ApiResponse.success(dashboardService.getSummary(userId, startDate, endDate)));
     }
 
@@ -44,7 +45,7 @@ public class DashboardController {
             @RequestParam(required = false) LocalDate endDate,
             @RequestParam(required = false) String type,
             Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = isViewer(authentication) ? getUserId(authentication) : null;
         return ResponseEntity.ok(ApiResponse.success(dashboardService.getCategoryTotals(userId, startDate, endDate, type)));
     }
 
@@ -53,7 +54,7 @@ public class DashboardController {
     public ResponseEntity<ApiResponse<List<RecordResponse>>> getRecentActivity(
             @RequestParam(defaultValue = "10") int limit,
             Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = isViewer(authentication) ? getUserId(authentication) : null;
         return ResponseEntity.ok(ApiResponse.success(dashboardService.getRecentActivity(userId, limit)));
     }
 
@@ -63,7 +64,7 @@ public class DashboardController {
             @RequestParam(defaultValue = "MONTHLY") String period,
             @RequestParam(defaultValue = "6") int count,
             Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = isViewer(authentication) ? getUserId(authentication) : null;
         return ResponseEntity.ok(ApiResponse.success(dashboardService.getTrends(userId, period, count)));
     }
 
@@ -78,5 +79,9 @@ public class DashboardController {
 
     private Long getUserId(Authentication authentication) {
         return (Long) authentication.getDetails();
+    }
+
+    private boolean isViewer(Authentication authentication) {
+        return authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_VIEWER"));
     }
 }

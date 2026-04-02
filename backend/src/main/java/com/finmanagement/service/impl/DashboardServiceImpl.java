@@ -9,6 +9,7 @@ import com.finmanagement.mapper.FinancialRecordMapper;
 import com.finmanagement.repository.FinancialRecordRepository;
 import com.finmanagement.service.DashboardService;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,9 +37,19 @@ public class DashboardServiceImpl implements DashboardService {
             endDate = currentMonth.atEndOfMonth();
         }
 
-        BigDecimal totalIncome = recordRepository.sumByUserIdAndTypeAndDateBetween(userId, RecordType.INCOME, startDate, endDate);
-        BigDecimal totalExpenses = recordRepository.sumByUserIdAndTypeAndDateBetween(userId, RecordType.EXPENSE, startDate, endDate);
-        long recordCount = recordRepository.countByUserIdAndDateBetween(userId, startDate, endDate);
+        BigDecimal totalIncome;
+        BigDecimal totalExpenses;
+        long recordCount;
+
+        if (userId != null) {
+            totalIncome = recordRepository.sumByUserIdAndTypeAndDateBetween(userId, RecordType.INCOME, startDate, endDate);
+            totalExpenses = recordRepository.sumByUserIdAndTypeAndDateBetween(userId, RecordType.EXPENSE, startDate, endDate);
+            recordCount = recordRepository.countByUserIdAndDateBetween(userId, startDate, endDate);
+        } else {
+            totalIncome = recordRepository.sumByTypeAndDateBetween(RecordType.INCOME, startDate, endDate);
+            totalExpenses = recordRepository.sumByTypeAndDateBetween(RecordType.EXPENSE, startDate, endDate);
+            recordCount = recordRepository.countByDateBetween(startDate, endDate);
+        }
 
         DashboardSummaryResponse response = new DashboardSummaryResponse();
         response.setTotalIncome(totalIncome);
@@ -59,7 +70,9 @@ public class DashboardServiceImpl implements DashboardService {
             endDate = currentMonth.atEndOfMonth();
         }
 
-        List<Object[]> results = recordRepository.getCategoryTotals(userId, startDate, endDate);
+        List<Object[]> results = userId != null
+                ? recordRepository.getCategoryTotals(userId, startDate, endDate)
+                : recordRepository.getAllCategoryTotals(startDate, endDate);
 
         return results.stream()
                 .filter(row -> type == null || row[1].toString().equals(type))
@@ -75,10 +88,12 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public List<RecordResponse> getRecentActivity(Long userId, int limit) {
         limit = Math.min(limit, 50);
-        return recordRepository.findByUserIdOrderByDateDesc(userId, PageRequest.of(0, limit))
-                .stream()
-                .map(recordMapper::toResponse)
-                .toList();
+        if (userId != null) {
+            return recordRepository.findByUserIdOrderByDateDesc(userId, PageRequest.of(0, limit))
+                    .stream().map(recordMapper::toResponse).toList();
+        }
+        return recordRepository.findAllByDeletedFalseOrderByDateDescCreatedAtDesc(PageRequest.of(0, limit))
+                .stream().map(recordMapper::toResponse).toList();
     }
 
     @Override
@@ -94,7 +109,9 @@ public class DashboardServiceImpl implements DashboardService {
             startDate = LocalDate.now().minusMonths(count);
         }
 
-        List<Object[]> results = recordRepository.getUserRecordsForTrends(userId, startDate);
+        List<Object[]> results = userId != null
+                ? recordRepository.getUserRecordsForTrends(userId, startDate)
+                : recordRepository.getAllRecordsForTrends(startDate);
 
         // Group by period key in Java
         Map<String, BigDecimal> incomeByPeriod = new LinkedHashMap<>();

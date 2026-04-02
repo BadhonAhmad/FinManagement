@@ -62,7 +62,9 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
 
         Specification<FinancialRecord> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.equal(root.get("user").get("id"), userId));
+            if (userId != null) {
+                predicates.add(cb.equal(root.get("user").get("id"), userId));
+            }
             predicates.add(cb.isFalse(root.get("deleted")));
 
             if (type != null) {

@@ -7,6 +7,7 @@ import com.finmanagement.dto.auth.RegisterRequest;
 import com.finmanagement.dto.common.ApiResponse;
 import com.finmanagement.dto.user.UserResponse;
 import com.finmanagement.entity.User;
+import com.finmanagement.entity.enums.Role;
 import com.finmanagement.exception.DuplicateResourceException;
 import com.finmanagement.mapper.UserMapper;
 import com.finmanagement.repository.UserRepository;
@@ -51,6 +52,12 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        String roleStr = request.getRole();
+        Role role = (roleStr != null && !roleStr.isBlank())
+                ? Role.valueOf(roleStr.toUpperCase())
+                : Role.VIEWER;
+        user.setRole(role);
 
         user = userRepository.save(user);
 
