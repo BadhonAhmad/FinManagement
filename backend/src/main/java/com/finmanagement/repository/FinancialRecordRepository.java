@@ -43,23 +43,10 @@ public interface FinancialRecordRepository extends JpaRepository<FinancialRecord
                                       @Param("startDate") LocalDate startDate,
                                       @Param("endDate") LocalDate endDate);
 
-    @Query(value = "SELECT strftime('%Y-%m', date) as period, " +
-           "COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END), 0) as total_income, " +
-           "COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0 END), 0) as total_expenses " +
-           "FROM financial_records " +
-           "WHERE user_id = :userId AND deleted = false AND date >= :startDate " +
-           "GROUP BY strftime('%Y-%m', date) ORDER BY period",
-           nativeQuery = true)
-    List<Object[]> getMonthlyTrends(@Param("userId") Long userId, @Param("startDate") LocalDate startDate);
-
-    @Query(value = "SELECT strftime('%Y-%W', date) as period, " +
-           "COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amount ELSE 0 END), 0) as total_income, " +
-           "COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0 END), 0) as total_expenses " +
-           "FROM financial_records " +
-           "WHERE user_id = :userId AND deleted = false AND date >= :startDate " +
-           "GROUP BY strftime('%Y-%W', date) ORDER BY period",
-           nativeQuery = true)
-    List<Object[]> getWeeklyTrends(@Param("userId") Long userId, @Param("startDate") LocalDate startDate);
+    @Query("SELECT r.date, r.type, r.amount FROM FinancialRecord r " +
+           "WHERE r.user.id = :userId AND r.deleted = false AND r.date >= :startDate " +
+           "ORDER BY r.date")
+    List<Object[]> getUserRecordsForTrends(@Param("userId") Long userId, @Param("startDate") LocalDate startDate);
 
     // Admin dashboard queries - aggregate across all users
     @Query("SELECT COALESCE(SUM(r.amount), 0) FROM FinancialRecord r " +
