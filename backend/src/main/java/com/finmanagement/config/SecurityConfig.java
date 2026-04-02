@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/docs/**", "/api/swagger-ui/**", "/api/swagger-ui.html").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/dashboard/**").hasAnyRole("ANALYST", "ADMIN")
+                .requestMatchers("/api/dashboard/**").authenticated()
                 .requestMatchers("/api/records/**").authenticated()
                 .anyRequest().authenticated()
             )
